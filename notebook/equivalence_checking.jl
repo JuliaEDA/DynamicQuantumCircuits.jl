@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.38
+# v0.19.43
 
 #> [frontmatter]
 #> title = "Quantum Circuit Equivalence Checking"
@@ -12,16 +12,12 @@ using InteractiveUtils
 
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
-  quote
-    local iv = try
-      Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value
-    catch
-      b -> missing
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
     end
-    local el = $(esc(element))
-    global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
-    el
-  end
 end
 
 # ╔═╡ 5d126c90-4711-11ee-0f12-e51f3cfa747f
@@ -33,16 +29,13 @@ begin
   #Pkg.add(path="/home/liam/src/quantum-circuits/impl/DynamicQuantumCircuits", rev="feat/zx")
   Pkg.add("DataFrames")
   Pkg.add("Vega")
-  Pkg.add(url="https://github.com/Roger-luo/Expronicon.jl")
-  Pkg.add(url="https://github.com/JuliaCompilerPlugins/CompilerPluginTools.jl")
-  Pkg.add(url="/home/liam/src/qc2/software/DynamicQuantumCircuits.jl")
-
+  Pkg.add(path="/home/liam/src/qc2/software/DynamicQuantumCircuits")
   Pkg.add(url="https://github.com/QuantumBFS/YaoHIR.jl")
   Pkg.add(url="https://github.com/contra-bit/OpenQASM.jl.git", rev="feature/czgate")
   Pkg.add(url="https://github.com/QuantumBFS/YaoLocations.jl", rev="master")
   Pkg.add(url="https://github.com/QuantumBFS/Multigraphs.jl")
   #Pkg.add(url="https://github.com/contra-bit/ZXCalculus.jl", rev="feat/convert_to_zxwd
-  Pkg.add(url="/home/liam/src/qc2/software/ZXCalculus.jl", rev="feature/plots")
+  Pkg.add(path="/home/liam/src/qc2/software/ZXCalculus.jl", rev="feature/plots")
   Pkg.add("PlutoUI")
   Pkg.add("ProfileVega")
 
@@ -111,6 +104,9 @@ html"""
 	}
 </style>
 """
+
+
+# ╔═╡ 47a48c85-4252-43a0-99c2-e9ff8e9fcb7c
 
 
 # ╔═╡ d8de0d85-d0cf-4d65-87dc-d111538691e0
@@ -423,6 +419,7 @@ end
 # ╔═╡ Cell order:
 # ╟─13dd1496-1321-4323-83cc-6e4c6e3d54bc
 # ╠═5d126c90-4711-11ee-0f12-e51f3cfa747f
+# ╠═47a48c85-4252-43a0-99c2-e9ff8e9fcb7c
 # ╠═d8de0d85-d0cf-4d65-87dc-d111538691e0
 # ╠═31304b6e-1db3-4899-a0fa-1ed7f0ffcae6
 # ╠═f49d681f-4da1-4da1-b080-481e9320a710
