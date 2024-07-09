@@ -1,6 +1,7 @@
 using DynamicQuantumCircuits
 using Test
 
-@testset "DynamicQuantumCircuits.jl" begin
-    # Write your tests here.
-end
+# include("quantum.information.jl")
+include("transformation.jl")
+include("reorder.jl")
+include("conversion.jl")
