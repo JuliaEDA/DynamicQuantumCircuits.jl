@@ -1,0 +1,13 @@
+name = "DynamicQuantumCircuits"
+uuid = "b9e8302f-12f4-484c-8961-adc524bf1aaa"
+authors = ["Liam Hurwitz"]
+version = "1.0.0-DEV"
+
+[compat]
+julia = "1.9.7"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
