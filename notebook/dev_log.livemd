@@ -1,0 +1,479 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# DynamicQuantumCircuits.jl notebook
+
+```elixir
+Mix.install([
+  {:kino_vega_lite, "~> 0.1.10"},
+  {:explorer, "~> 0.7.0"},
+  {:kino_explorer, "~> 0.1.11"}
+])
+```
+
+## Diagrams
+
+<!-- Learn more at https://mermaid-js.github.io/mermaid -->
+
+```mermaid
+sequenceDiagram
+  box Quantum Circuits
+  participant O as OpenQASM.jl
+  participant E as DynamicQuantumCircuits.jl
+  participant Y as YaoHIR.jl
+  end
+
+  box Diagramic Reasoning
+  participant Z as ZXCalculus.jl
+  end
+
+  box Tensor Network 
+  participant T as OMEinsum.jl
+  end
+  
+
+  loop every Quantum Circuits
+  O->>E: create_qasm_from_string::String
+  E->>O: parse::MainProgram
+  Note right of O: Add Support for dagger & includes
+  E->>E: reconstruct_unitary::MainProgram
+  Note right of O: Add support for IFStmt with cphase
+  E->>E: prepare_for_BlockIR::MainProgram
+  Note right of Y: remove Barrier
+  E->>Y: convert_qasm::BlockIR
+  Y->>Z: convert_blockir::ZXDiagram
+  Note right of Y: remove Meausrements
+  Z->>Z: full_reduction::ZXGraph
+  end
+  Z->>Z: merge_adjoint_diagram::ZXGraph
+  Z->>Z: contains_only_bare_wires::Bool
+  create actor U as User
+  alt only bare wires
+  Z->>U: ciruits are equivalent
+  else
+
+  Z->>T: create_tensor
+  T->>T: find_optimal_contraction
+  alt using Matrix
+  T->>Z: create_matrix
+  Z->>E: calculate_trace_distance
+  E->>U:Calculated trace_distance
+  end
+  alt Equivalence with TDD
+  Z->>T: check_equicalence_with_tdd
+   Note right of Z: Out of scope
+  alt approximate equivalence
+  T->>U: graphical_tdd_trace_distance
+  Note right of Z: Out of scope
+  else
+  T->>U: exact_tdd_equivalence
+  Note right of Z: Out of scope
+  end
+  end
+  end
+
+```
+
+```elixir
+alias Explorer.{DataFrame, Series}
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[Explorer.DataFrame, Explorer.Series]
+```
+
+```elixir
+path = "/home/liam/src/quantum-circuits/software/DynamicQuantumCircuits.jl/benchmark/"
+csv = "benchmark_results.csv"
+
+benchmark = DataFrame.from_csv!(path <> csv)
+
+static =
+  DataFrame.from_csv!(path <> "static-benchmark_results.csv")
+
+static_changed = DataFrame.from_csv!(path <> "static-benchmark_results_changed.csv")
+static_same = DataFrame.from_csv!(path <> "static-benchmark_results_same.csv")
+
+# static_small =
+#  DataFrame.from_csv!(path <> "benchmark-results-static-small.csv")
+
+dynamic = DataFrame.from_csv!(path <> "benchmark_results.csv")
+
+require DataFrame, as: DF
+correct_dynamic = DF.filter(dynamic, col("Result") == "equivalent")
+false_dynamic = DF.filter(dynamic, col("Result") != "equivalent")
+```
+
+<!-- livebook:{"output":true} -->
+
+```text
+#Explorer.DataFrame<
+  Polars[216 x 18]
+  Benchmark string ["DJ-PASS-2-3", "DJ-PASS-2-3", "DJ-PASS-2-3", "DJ-PASS-2-3", "DJ-PASS-2-3", ...]
+  indep_Varitant string ["indep", "indep", "indep", "indep", "indep", ...]
+  indep_Qubits integer [3, 3, 3, 3, 3, ...]
+  indep_Depth integer [5, 5, 5, 5, 5, ...]
+  indep_Single_Gates integer [6, 6, 6, 6, 6, ...]
+  indep_Two_Qubit_Gates integer [1, 1, 1, 1, 1, ...]
+  transpiled_Varitant string ["dynamic1", "dynamic1", "dynamic1", "dynamic1", "dynamic1", ...]
+  transpiled_Qubits integer [3, 3, 3, 3, 3, ...]
+  transpiled_Depth integer [8, 8, 8, 8, 8, ...]
+  transpiled_Single_Gates integer [6, 6, 6, 6, 6, ...]
+  transpiled_Two_Qubit_Gates integer [2, 2, 2, 2, 2, ...]
+  Result string ["not_equivalent", "probably_not_equivalent", "not_equivalent", "not_equivalent", "not_equivalent", ...]
+  Implementation string ["qcec_auto", "qcec_zx", "qcec_qmdd", "qcec_qmdd_construction", "qcec_qmdd_alternative", ...]
+  Time f64 [4.507834, 2.87675, 11.1335, 2.160958, 2.153625, ...]
+  Allocations integer [34, 50, 50, 50, 50, ...]
+  Memory integer [1920, 2400, 2400, 2400, 2400, ...]
+  Evals integer [1, 1, 1, 1, 1, ...]
+  Samples integer [1, 1, 1, 1, 1, ...]
+>
+```
+
+```elixir
+static_same
+```
+
+<!-- livebook:{"output":true} -->
+
+```text
+#Explorer.DataFrame<
+  Polars[57 x 12]
+  Benchmark string ["dj-3", "dj-3", "dj-3", "dj-9", "dj-9", ...]
+  Qubits integer [3, 3, 3, 9, 9, ...]
+  Depth integer [7, 7, 7, 12, 12, ...]
+  Single_Gates integer [10, 10, 10, 28, 28, ...]
+  Two_Qubit_Gates integer [2, 2, 2, 8, 8, ...]
+  Implementation string ["pyzx", "qcec_zx", "qcec_qmdd", "pyzx", "qcec_zx", ...]
+  Result string ["equivalent", "equivalent", "equivalent", "equivalent", "equivalent", ...]
+  Time f64 [0.638084, 2.824958, 4.485333, 2.223125, 3.651667, ...]
+  Allocations integer [13, 50, 50, 13, 50, ...]
+  Memory integer [688, 2400, 2400, 688, 2400, ...]
+  Evals integer [1, 1, 1, 1, 1, ...]
+  Samples integer [1, 1, 1, 1, 1, ...]
+>
+```
+
+<!-- livebook:{"attrs":{"assign_to":"qmdd","collect":true,"data_frame":"dynamic","data_frame_alias":"Elixir.DataFrame","is_data_frame":true,"missing_require":null,"operations":[{"active":true,"column":"Implementation","data_options":{"Allocations":"integer","Benchmark":"string","Evals":"integer","Implementation":"string","Memory":"integer","Result":"string","Samples":"integer","Time":"float","indep_Depth":"integer","indep_Qubits":"integer","indep_Single_Gates":"integer","indep_Two_Qubit_Gates":"integer","indep_Varitant":"string","transpiled_Depth":"integer","transpiled_Qubits":"integer","transpiled_Single_Gates":"integer","transpiled_Two_Qubit_Gates":"integer","transpiled_Varitant":"string"},"datalist":["qcec_auto","qcec_zx","qcec_qmdd","qcec_qmdd_construction","qcec_qmdd_alternative","qcec_qmdd_simulation"],"filter":"contains","message":null,"operation_type":"filters","type":"string","value":"qmdd_"}]},"chunks":null,"kind":"Elixir.KinoExplorer.DataTransformCell","livebook_object":"smart_cell"} -->
+
+```elixir
+qmdd =
+  dynamic
+  |> DataFrame.lazy()
+  |> DataFrame.filter(contains(col("Implementation"), "qmdd_"))
+  |> DataFrame.collect()
+```
+
+<!-- livebook:{"output":true} -->
+
+```text
+#Explorer.DataFrame<
+  Polars[111 x 18]
+  Benchmark string ["DJ-PASS-2-3", "DJ-PASS-2-3", "DJ-PASS-2-3", "DJ-CARRY-4", "DJ-CARRY-4", ...]
+  indep_Varitant string ["indep", "indep", "indep", "indep", "indep", ...]
+  indep_Qubits integer [3, 3, 3, 4, 4, ...]
+  indep_Depth integer [5, 5, 5, 35, 35, ...]
+  indep_Single_Gates integer [6, 6, 6, 26, 26, ...]
+  indep_Two_Qubit_Gates integer [1, 1, 1, 18, 18, ...]
+  transpiled_Varitant string ["dynamic1", "dynamic1", "dynamic1", "dynamic1", "dynamic1", ...]
+  transpiled_Qubits integer [3, 3, 3, 4, 4, ...]
+  transpiled_Depth integer [8, 8, 8, 60, 60, ...]
+  transpiled_Single_Gates integer [6, 6, 6, 41, 41, ...]
+  transpiled_Two_Qubit_Gates integer [2, 2, 2, 18, 18, ...]
+  Result string ["not_equivalent", "not_equivalent", "not_equivalent", "not_equivalent", "not_equivalent", ...]
+  Implementation string ["qcec_qmdd_construction", "qcec_qmdd_alternative", "qcec_qmdd_simulation", "qcec_qmdd_construction", "qcec_qmdd_alternative", ...]
+  Time float [2.160958, 2.153625, 3.874791, 3.4775, 3.711667, ...]
+  Allocations integer [50, 50, 50, 50, 50, ...]
+  Memory integer [2400, 2400, 2400, 2400, 2400, ...]
+  Evals integer [1, 1, 1, 1, 1, ...]
+  Samples integer [1, 1, 1, 1, 1, ...]
+>
+```
+
+<!-- livebook:{"attrs":{"assign_to":"zx","collect":true,"data_frame":"dynamic","data_frame_alias":"Elixir.DataFrame","is_data_frame":true,"missing_require":null,"operations":[{"active":true,"column":"Implementation","data_options":{"Allocations":"integer","Benchmark":"string","Evals":"integer","Implementation":"string","Memory":"integer","Result":"string","Samples":"integer","Time":"float","indep_Depth":"integer","indep_Qubits":"integer","indep_Single_Gates":"integer","indep_Two_Qubit_Gates":"integer","indep_Varitant":"string","transpiled_Depth":"integer","transpiled_Qubits":"integer","transpiled_Single_Gates":"integer","transpiled_Two_Qubit_Gates":"integer","transpiled_Varitant":"string"},"datalist":["qcec_auto","qcec_zx","qcec_qmdd","qcec_qmdd_construction","qcec_qmdd_alternative","qcec_qmdd_simulation"],"filter":"contains","message":null,"operation_type":"filters","type":"string","value":"zx"}]},"chunks":null,"kind":"Elixir.KinoExplorer.DataTransformCell","livebook_object":"smart_cell"} -->
+
+```elixir
+zx =
+  dynamic
+  |> DataFrame.lazy()
+  |> DataFrame.filter(contains(col("Implementation"), "zx"))
+  |> DataFrame.collect()
+```
+
+<!-- livebook:{"output":true} -->
+
+```text
+#Explorer.DataFrame<
+  Polars[37 x 18]
+  Benchmark string ["DJ-PASS-2-3", "DJ-CARRY-4", "DJ-CARRY-4", "QPE-00-3", "QPE-00-3", ...]
+  indep_Varitant string ["indep", "indep", "indep", "indep", "indep", ...]
+  indep_Qubits integer [3, 4, 4, 3, 3, ...]
+  indep_Depth integer [5, 35, 35, 8, 8, ...]
+  indep_Single_Gates integer [6, 26, 26, 5, 5, ...]
+  indep_Two_Qubit_Gates integer [1, 18, 18, 0, 0, ...]
+  transpiled_Varitant string ["dynamic1", "dynamic1", "dynamic2", "dynamic", "dynamic", ...]
+  transpiled_Qubits integer [3, 4, 4, 3, 3, ...]
+  transpiled_Depth integer [8, 60, 68, 11, 11, ...]
+  transpiled_Single_Gates integer [6, 41, 49, 6, 6, ...]
+  transpiled_Two_Qubit_Gates integer [2, 18, 18, 0, 0, ...]
+  Result string ["probably_not_equivalent", "probably_not_equivalent", "no_information", "probably_not_equivalent", "probably_not_equivalent", ...]
+  Implementation string ["qcec_zx", "qcec_zx", "qcec_zx", "qcec_zx", "qcec_zx", ...]
+  Time float [2.87675, 13.840209, 6.647625, 3.011916, 3.174208, ...]
+  Allocations integer [50, 50, 50, 50, 50, ...]
+  Memory integer [2400, 2400, 2400, 2400, 2400, ...]
+  Evals integer [1, 1, 1, 1, 1, ...]
+  Samples integer [1, 1, 1, 1, 1, ...]
+>
+```
+
+<!-- livebook:{"attrs":{"assign_to":"static_grouped","collect":true,"data_frame":"static_changed","data_frame_alias":"Elixir.DataFrame","is_data_frame":true,"lazy":true,"missing_require":null,"operations":[{"active":true,"columns":["Implementation","Qubits"],"data_options":{"Allocations":"integer","Benchmark":"string","Depth":"integer","Evals":"integer","Implementation":"string","Memory":"integer","Qubits":"integer","Result":"string","Samples":"integer","Single_Gates":"integer","Time":"float","Two_Qubit_Gates":"integer"},"operation_type":"group_by"},{"active":true,"columns":["Time","Memory","Allocations"],"data_options":{"Allocations":"integer","Benchmark":"string","Depth":"integer","Evals":"integer","Implementation":"string","Memory":"integer","Qubits":"integer","Result":"string","Samples":"integer","Single_Gates":"integer","Time":"float","Two_Qubit_Gates":"integer"},"operation_type":"summarise","query":"mean"},{"active":true,"data_options":{"Allocations_mean":"float","Implementation":"string","Memory_mean":"float","Qubits":"integer","Time_mean":"float"},"direction":"asc","operation_type":"sorting","sort_by":"Qubits"}]},"chunks":null,"kind":"Elixir.KinoExplorer.DataTransformCell","livebook_object":"smart_cell"} -->
+
+```elixir
+static_grouped =
+  static_changed
+  |> DataFrame.lazy()
+  |> DataFrame.group_by(["Implementation", "Qubits"])
+  |> DataFrame.summarise(
+    Time_mean: mean(col("Time")),
+    Memory_mean: mean(col("Memory")),
+    Allocations_mean: mean(col("Allocations"))
+  )
+  |> DataFrame.arrange(asc: col("Qubits"))
+  |> DataFrame.collect()
+```
+
+<!-- livebook:{"output":true} -->
+
+```text
+#Explorer.DataFrame<
+  Polars[57 x 5]
+  Implementation string ["pyzx", "qcec_zx", "qcec_qmdd", "pyzx", "qcec_zx", ...]
+  Qubits integer [2, 2, 2, 3, 3, ...]
+  Time_mean float [0.533375, 3.094958, 3.772292, 0.681958, 3.138084, ...]
+  Memory_mean float [688.0, 2.4e3, 2.4e3, 688.0, 2.4e3, ...]
+  Allocations_mean float [13.0, 50.0, 50.0, 13.0, 50.0, ...]
+>
+```
+
+<!-- livebook:{"attrs":{"chart_title":"Runtime DJ by Implementation","height":null,"layers":[{"active":true,"chart_type":"line","color_field":"Implementation","color_field_aggregate":null,"color_field_bin":null,"color_field_scale_scheme":null,"color_field_type":"nominal","data_variable":"static_grouped","geodata_color":"blue","latitude_field":null,"longitude_field":null,"x_field":"Qubits","x_field_aggregate":null,"x_field_bin":null,"x_field_scale_type":null,"x_field_type":"quantitative","y_field":"Allocations_mean","y_field_aggregate":null,"y_field_bin":null,"y_field_scale_type":null,"y_field_type":"quantitative"}],"vl_alias":"Elixir.VegaLite","width":600},"chunks":null,"kind":"Elixir.KinoVegaLite.ChartCell","livebook_object":"smart_cell"} -->
+
+```elixir
+VegaLite.new(width: 600, title: "Runtime DJ by Implementation")
+|> VegaLite.data_from_values(static_grouped,
+  only: ["Qubits", "Allocations_mean", "Implementation"]
+)
+|> VegaLite.mark(:line)
+|> VegaLite.encode_field(:x, "Qubits", type: :quantitative)
+|> VegaLite.encode_field(:y, "Allocations_mean", type: :quantitative)
+|> VegaLite.encode_field(:color, "Implementation", type: :nominal)
+```
+
+<!-- livebook:{"output":true} -->
+
+```vega-lite
+{"$schema":"https://vega.github.io/schema/vega-lite/v5.json","data":{"values":[{"Allocations_mean":13.0,"Implementation":"pyzx","Qubits":3},{"Allocations_mean":50.0,"Implementation":"qcec_zx","Qubits":3},{"Allocations_mean":50.0,"Implementation":"qcec_qmdd","Qubits":3},{"Allocations_mean":13.0,"Implementation":"pyzx","Qubits":9},{"Allocations_mean":50.0,"Implementation":"qcec_zx","Qubits":9},{"Allocations_mean":50.0,"Implementation":"qcec_qmdd","Qubits":9},{"Allocations_mean":13.0,"Implementation":"pyzx","Qubits":19},{"Allocations_mean":50.0,"Implementation":"qcec_zx","Qubits":19},{"Allocations_mean":50.0,"Implementation":"qcec_qmdd","Qubits":19},{"Allocations_mean":13.0,"Implementation":"pyzx","Qubits":8},{"Allocations_mean":50.0,"Implementation":"qcec_zx","Qubits":8},{"Allocations_mean":50.0,"Implementation":"qcec_qmdd","Qubits":8},{"Allocations_mean":13.0,"Implementation":"pyzx","Qubits":4},{"Allocations_mean":50.0,"Implementation":"qcec_zx","Qubits":4},{"Allocations_mean":50.0,"Implementation":"qcec_qmdd","Qubits":4},{"Allocations_mean":13.0,"Implementation":"pyzx","Qubits":6},{"Allocations_mean":50.0,"Implementation":"qcec_zx","Qubits":6},{"Allocations_mean":50.0,"Implementation":"qcec_qmdd","Qubits":6},{"Allocations_mean":13.0,"Implementation":"pyzx","Qubits":12},{"Allocations_mean":50.0,"Implementation":"qcec_zx","Qubits":12},{"Allocations_mean":50.0,"Implementation":"qcec_qmdd","Qubits":12},{"Allocations_mean":13.0,"Implementation":"pyzx","Qubits":10},{"Allocations_mean":50.0,"Implementation":"qcec_zx","Qubits":10},{"Allocations_mean":50.0,"Implementation":"qcec_qmdd","Qubits":10},{"Allocations_mean":13.0,"Implementation":"pyzx","Qubits":20},{"Allocations_mean":50.0,"Implementation":"qcec_zx","Qubits":20},{"Allocations_mean":50.0,"Implementation":"qcec_qmdd","Qubits":20},{"Allocations_mean":13.0,"Implementation":"pyzx","Qubits":2},{"Allocations_mean":50.0,"Implementation":"qcec_zx","Qubits":2},{"Allocations_mean":50.0,"Implementation":"qcec_qmdd","Qubits":2},{"Allocations_mean":13.0,"Implementation":"pyzx","Qubits":15},{"Allocations_mean":50.0,"Implementation":"qcec_zx","Qubits":15},{"Allocations_mean":50.0,"Implementation":"qcec_qmdd","Qubits":15},{"Allocations_mean":13.0,"Implementation":"pyzx","Qubits":18},{"Allocations_mean":50.0,"Implementation":"qcec_zx","Qubits":18},{"Allocations_mean":50.0,"Implementation":"qcec_qmdd","Qubits":18},{"Allocations_mean":13.0,"Implementation":"pyzx","Qubits":11},{"Allocations_mean":50.0,"Implementation":"qcec_zx","Qubits":11},{"Allocations_mean":50.0,"Implementation":"qcec_qmdd","Qubits":11},{"Allocations_mean":13.0,"Implementation":"pyzx","Qubits":13},{"Allocations_mean":50.0,"Implementation":"qcec_zx","Qubits":13},{"Allocations_mean":50.0,"Implementation":"qcec_qmdd","Qubits":13},{"Allocations_mean":13.0,"Implementation":"pyzx","Qubits":16},{"Allocations_mean":50.0,"Implementation":"qcec_zx","Qubits":16},{"Allocations_mean":50.0,"Implementation":"qcec_qmdd","Qubits":16},{"Allocations_mean":13.0,"Implementation":"pyzx","Qubits":14},{"Allocations_mean":50.0,"Implementation":"qcec_zx","Qubits":14},{"Allocations_mean":50.0,"Implementation":"qcec_qmdd","Qubits":14},{"Allocations_mean":13.0,"Implementation":"pyzx","Qubits":7},{"Allocations_mean":50.0,"Implementation":"qcec_zx","Qubits":7},{"Allocations_mean":50.0,"Implementation":"qcec_qmdd","Qubits":7},{"Allocations_mean":13.0,"Implementation":"pyzx","Qubits":5},{"Allocations_mean":50.0,"Implementation":"qcec_zx","Qubits":5},{"Allocations_mean":50.0,"Implementation":"qcec_qmdd","Qubits":5},{"Allocations_mean":13.0,"Implementation":"pyzx","Qubits":17},{"Allocations_mean":50.0,"Implementation":"qcec_zx","Qubits":17},{"Allocations_mean":50.0,"Implementation":"qcec_qmdd","Qubits":17}]},"encoding":{"color":{"field":"Implementation","type":"nominal"},"x":{"field":"Qubits","type":"quantitative"},"y":{"field":"Allocations_mean","type":"quantitative"}},"mark":"line","title":"Runtime DJ by Implementation","width":600}
+```
+
+<!-- livebook:{"attrs":{"chart_title":"Runtime by Implementation","height":null,"layers":[{"active":false,"chart_type":"bar","color_field":"Implementation","color_field_aggregate":null,"color_field_bin":null,"color_field_scale_scheme":null,"color_field_type":"nominal","data_variable":"qmdd","geodata_color":"blue","latitude_field":null,"longitude_field":null,"x_field":"Benchmark","x_field_aggregate":null,"x_field_bin":null,"x_field_scale_type":null,"x_field_type":"nominal","y_field":"Time","y_field_aggregate":null,"y_field_bin":null,"y_field_scale_type":null,"y_field_type":"quantitative"},{"active":true,"chart_type":"boxplot","color_field":null,"color_field_aggregate":null,"color_field_bin":null,"color_field_scale_scheme":null,"color_field_type":null,"data_variable":"static_same","geodata_color":"blue","latitude_field":null,"longitude_field":null,"x_field":"Implementation","x_field_aggregate":null,"x_field_bin":null,"x_field_scale_type":null,"x_field_type":"nominal","y_field":"Time","y_field_aggregate":null,"y_field_bin":null,"y_field_scale_type":null,"y_field_type":"quantitative"}],"vl_alias":"Elixir.VegaLite","width":600},"chunks":null,"kind":"Elixir.KinoVegaLite.ChartCell","livebook_object":"smart_cell"} -->
+
+```elixir
+VegaLite.new(width: 600, title: "Runtime by Implementation")
+|> VegaLite.layers([
+  VegaLite.new()
+  |> VegaLite.data_from_values(static_same, only: ["Implementation", "Time"])
+  |> VegaLite.mark(:boxplot)
+  |> VegaLite.encode_field(:x, "Implementation", type: :nominal)
+  |> VegaLite.encode_field(:y, "Time", type: :quantitative)
+])
+```
+
+<!-- livebook:{"output":true} -->
+
+```vega-lite
+{"$schema":"https://vega.github.io/schema/vega-lite/v5.json","layer":[{"data":{"values":[{"Implementation":"pyzx","Time":0.638084},{"Implementation":"qcec_zx","Time":2.824958},{"Implementation":"qcec_qmdd","Time":4.485333},{"Implementation":"pyzx","Time":2.223125},{"Implementation":"qcec_zx","Time":3.651667},{"Implementation":"qcec_qmdd","Time":5.964333},{"Implementation":"pyzx","Time":4.075375},{"Implementation":"qcec_zx","Time":4.065208},{"Implementation":"qcec_qmdd","Time":11.216},{"Implementation":"pyzx","Time":3.216125},{"Implementation":"qcec_zx","Time":3.786417},{"Implementation":"qcec_qmdd","Time":5.729792},{"Implementation":"pyzx","Time":0.845792},{"Implementation":"qcec_zx","Time":2.946416},{"Implementation":"qcec_qmdd","Time":4.903291},{"Implementation":"pyzx","Time":1.136084},{"Implementation":"qcec_zx","Time":3.551},{"Implementation":"qcec_qmdd","Time":7.802375},{"Implementation":"pyzx","Time":2.872791},{"Implementation":"qcec_zx","Time":4.385625},{"Implementation":"qcec_qmdd","Time":7.993666},{"Implementation":"pyzx","Time":2.564},{"Implementation":"qcec_zx","Time":3.232083},{"Implementation":"qcec_qmdd","Time":8.009042},{"Implementation":"pyzx","Time":4.883666},{"Implementation":"qcec_zx","Time":4.05075},{"Implementation":"qcec_qmdd","Time":7.887834},{"Implementation":"pyzx","Time":0.455875},{"Implementation":"qcec_zx","Time":3.969083},{"Implementation":"qcec_qmdd","Time":6.201166},{"Implementation":"pyzx","Time":3.337042},{"Implementation":"qcec_zx","Time":5.534834},{"Implementation":"qcec_qmdd","Time":8.862916},{"Implementation":"pyzx","Time":4.175833},{"Implementation":"qcec_zx","Time":5.042875},{"Implementation":"qcec_qmdd","Time":11.410958},{"Implementation":"pyzx","Time":2.647042},{"Implementation":"qcec_zx","Time":5.714375},{"Implementation":"qcec_qmdd","Time":7.7305},{"Implementation":"pyzx","Time":2.970709},{"Implementation":"qcec_zx","Time":4.5065},{"Implementation":"qcec_qmdd","Time":8.179875},{"Implementation":"pyzx","Time":3.866041},{"Implementation":"qcec_zx","Time":4.697875},{"Implementation":"qcec_qmdd","Time":13.591167},{"Implementation":"pyzx","Time":3.394375},{"Implementation":"qcec_zx","Time":4.606709},{"Implementation":"qcec_qmdd","Time":9.057292},{"Implementation":"pyzx","Time":1.96575},{"Implementation":"qcec_zx","Time":3.631542},{"Implementation":"qcec_qmdd","Time":6.153916},{"Implementation":"pyzx","Time":1.003209},{"Implementation":"qcec_zx","Time":3.2285},{"Implementation":"qcec_qmdd","Time":4.619708},{"Implementation":"pyzx","Time":3.914834},{"Implementation":"qcec_zx","Time":4.831125},{"Implementation":"qcec_qmdd","Time":9.542}]},"encoding":{"x":{"field":"Implementation","type":"nominal"},"y":{"field":"Time","type":"quantitative"}},"mark":"boxplot"}],"title":"Runtime by Implementation","width":600}
+```
+
+<!-- livebook:{"attrs":{"chart_title":"Runtime for DJ Circuits","height":null,"layers":[{"active":true,"chart_type":"line","color_field":"Implementation","color_field_aggregate":null,"color_field_bin":null,"color_field_scale_scheme":null,"color_field_type":"nominal","data_variable":"static_same","geodata_color":"blue","latitude_field":null,"longitude_field":null,"x_field":"Qubits","x_field_aggregate":null,"x_field_bin":null,"x_field_scale_type":null,"x_field_type":"quantitative","y_field":"Time","y_field_aggregate":null,"y_field_bin":null,"y_field_scale_type":null,"y_field_type":"quantitative"}],"vl_alias":"Elixir.VegaLite","width":600},"chunks":null,"kind":"Elixir.KinoVegaLite.ChartCell","livebook_object":"smart_cell"} -->
+
+```elixir
+VegaLite.new(width: 600, title: "Runtime for DJ Circuits")
+|> VegaLite.data_from_values(static_same, only: ["Qubits", "Time", "Implementation"])
+|> VegaLite.mark(:line)
+|> VegaLite.encode_field(:x, "Qubits", type: :quantitative)
+|> VegaLite.encode_field(:y, "Time", type: :quantitative)
+|> VegaLite.encode_field(:color, "Implementation", type: :nominal)
+```
+
+<!-- livebook:{"output":true} -->
+
+```vega-lite
+{"$schema":"https://vega.github.io/schema/vega-lite/v5.json","data":{"values":[{"Implementation":"pyzx","Qubits":3,"Time":0.638084},{"Implementation":"qcec_zx","Qubits":3,"Time":2.824958},{"Implementation":"qcec_qmdd","Qubits":3,"Time":4.485333},{"Implementation":"pyzx","Qubits":9,"Time":2.223125},{"Implementation":"qcec_zx","Qubits":9,"Time":3.651667},{"Implementation":"qcec_qmdd","Qubits":9,"Time":5.964333},{"Implementation":"pyzx","Qubits":19,"Time":4.075375},{"Implementation":"qcec_zx","Qubits":19,"Time":4.065208},{"Implementation":"qcec_qmdd","Qubits":19,"Time":11.216},{"Implementation":"pyzx","Qubits":8,"Time":3.216125},{"Implementation":"qcec_zx","Qubits":8,"Time":3.786417},{"Implementation":"qcec_qmdd","Qubits":8,"Time":5.729792},{"Implementation":"pyzx","Qubits":4,"Time":0.845792},{"Implementation":"qcec_zx","Qubits":4,"Time":2.946416},{"Implementation":"qcec_qmdd","Qubits":4,"Time":4.903291},{"Implementation":"pyzx","Qubits":6,"Time":1.136084},{"Implementation":"qcec_zx","Qubits":6,"Time":3.551},{"Implementation":"qcec_qmdd","Qubits":6,"Time":7.802375},{"Implementation":"pyzx","Qubits":12,"Time":2.872791},{"Implementation":"qcec_zx","Qubits":12,"Time":4.385625},{"Implementation":"qcec_qmdd","Qubits":12,"Time":7.993666},{"Implementation":"pyzx","Qubits":10,"Time":2.564},{"Implementation":"qcec_zx","Qubits":10,"Time":3.232083},{"Implementation":"qcec_qmdd","Qubits":10,"Time":8.009042},{"Implementation":"pyzx","Qubits":20,"Time":4.883666},{"Implementation":"qcec_zx","Qubits":20,"Time":4.05075},{"Implementation":"qcec_qmdd","Qubits":20,"Time":7.887834},{"Implementation":"pyzx","Qubits":2,"Time":0.455875},{"Implementation":"qcec_zx","Qubits":2,"Time":3.969083},{"Implementation":"qcec_qmdd","Qubits":2,"Time":6.201166},{"Implementation":"pyzx","Qubits":15,"Time":3.337042},{"Implementation":"qcec_zx","Qubits":15,"Time":5.534834},{"Implementation":"qcec_qmdd","Qubits":15,"Time":8.862916},{"Implementation":"pyzx","Qubits":18,"Time":4.175833},{"Implementation":"qcec_zx","Qubits":18,"Time":5.042875},{"Implementation":"qcec_qmdd","Qubits":18,"Time":11.410958},{"Implementation":"pyzx","Qubits":11,"Time":2.647042},{"Implementation":"qcec_zx","Qubits":11,"Time":5.714375},{"Implementation":"qcec_qmdd","Qubits":11,"Time":7.7305},{"Implementation":"pyzx","Qubits":13,"Time":2.970709},{"Implementation":"qcec_zx","Qubits":13,"Time":4.5065},{"Implementation":"qcec_qmdd","Qubits":13,"Time":8.179875},{"Implementation":"pyzx","Qubits":16,"Time":3.866041},{"Implementation":"qcec_zx","Qubits":16,"Time":4.697875},{"Implementation":"qcec_qmdd","Qubits":16,"Time":13.591167},{"Implementation":"pyzx","Qubits":14,"Time":3.394375},{"Implementation":"qcec_zx","Qubits":14,"Time":4.606709},{"Implementation":"qcec_qmdd","Qubits":14,"Time":9.057292},{"Implementation":"pyzx","Qubits":7,"Time":1.96575},{"Implementation":"qcec_zx","Qubits":7,"Time":3.631542},{"Implementation":"qcec_qmdd","Qubits":7,"Time":6.153916},{"Implementation":"pyzx","Qubits":5,"Time":1.003209},{"Implementation":"qcec_zx","Qubits":5,"Time":3.2285},{"Implementation":"qcec_qmdd","Qubits":5,"Time":4.619708},{"Implementation":"pyzx","Qubits":17,"Time":3.914834},{"Implementation":"qcec_zx","Qubits":17,"Time":4.831125},{"Implementation":"qcec_qmdd","Qubits":17,"Time":9.542}]},"encoding":{"color":{"field":"Implementation","type":"nominal"},"x":{"field":"Qubits","type":"quantitative"},"y":{"field":"Time","type":"quantitative"}},"mark":"line","title":"Runtime for DJ Circuits","width":600}
+```
+
+<!-- livebook:{"attrs":{"chart_title":"Runtime ","height":null,"layers":[{"active":true,"chart_type":"area","color_field":"Implemenation","color_field_aggregate":null,"color_field_bin":null,"color_field_scale_scheme":null,"color_field_type":"nominal","data_variable":"static_same","geodata_color":"blue","latitude_field":null,"longitude_field":null,"x_field":"Benchmark","x_field_aggregate":null,"x_field_bin":null,"x_field_scale_type":null,"x_field_type":"nominal","y_field":"Time","y_field_aggregate":null,"y_field_bin":null,"y_field_scale_type":null,"y_field_type":"quantitative"}],"vl_alias":"Elixir.VegaLite","width":600},"chunks":null,"kind":"Elixir.KinoVegaLite.ChartCell","livebook_object":"smart_cell"} -->
+
+```elixir
+VegaLite.new(width: 600, title: "Runtime ")
+|> VegaLite.data_from_values(static_same, only: ["Benchmark", "Time", "Implemenation"])
+|> VegaLite.mark(:area)
+|> VegaLite.encode_field(:x, "Benchmark", type: :nominal)
+|> VegaLite.encode_field(:y, "Time", type: :quantitative)
+|> VegaLite.encode_field(:color, "Implemenation", type: :nominal)
+```
+
+<!-- livebook:{"output":true} -->
+
+```vega-lite
+{"$schema":"https://vega.github.io/schema/vega-lite/v5.json","data":{"values":[{"Benchmark":"dj-3","Time":0.638084},{"Benchmark":"dj-3","Time":2.824958},{"Benchmark":"dj-3","Time":4.485333},{"Benchmark":"dj-9","Time":2.223125},{"Benchmark":"dj-9","Time":3.651667},{"Benchmark":"dj-9","Time":5.964333},{"Benchmark":"dj-19","Time":4.075375},{"Benchmark":"dj-19","Time":4.065208},{"Benchmark":"dj-19","Time":11.216},{"Benchmark":"dj-8","Time":3.216125},{"Benchmark":"dj-8","Time":3.786417},{"Benchmark":"dj-8","Time":5.729792},{"Benchmark":"dj-4","Time":0.845792},{"Benchmark":"dj-4","Time":2.946416},{"Benchmark":"dj-4","Time":4.903291},{"Benchmark":"dj-6","Time":1.136084},{"Benchmark":"dj-6","Time":3.551},{"Benchmark":"dj-6","Time":7.802375},{"Benchmark":"dj-12","Time":2.872791},{"Benchmark":"dj-12","Time":4.385625},{"Benchmark":"dj-12","Time":7.993666},{"Benchmark":"dj-10","Time":2.564},{"Benchmark":"dj-10","Time":3.232083},{"Benchmark":"dj-10","Time":8.009042},{"Benchmark":"dj-20","Time":4.883666},{"Benchmark":"dj-20","Time":4.05075},{"Benchmark":"dj-20","Time":7.887834},{"Benchmark":"dj-2","Time":0.455875},{"Benchmark":"dj-2","Time":3.969083},{"Benchmark":"dj-2","Time":6.201166},{"Benchmark":"dj-15","Time":3.337042},{"Benchmark":"dj-15","Time":5.534834},{"Benchmark":"dj-15","Time":8.862916},{"Benchmark":"dj-18","Time":4.175833},{"Benchmark":"dj-18","Time":5.042875},{"Benchmark":"dj-18","Time":11.410958},{"Benchmark":"dj-11","Time":2.647042},{"Benchmark":"dj-11","Time":5.714375},{"Benchmark":"dj-11","Time":7.7305},{"Benchmark":"dj-13","Time":2.970709},{"Benchmark":"dj-13","Time":4.5065},{"Benchmark":"dj-13","Time":8.179875},{"Benchmark":"dj-16","Time":3.866041},{"Benchmark":"dj-16","Time":4.697875},{"Benchmark":"dj-16","Time":13.591167},{"Benchmark":"dj-14","Time":3.394375},{"Benchmark":"dj-14","Time":4.606709},{"Benchmark":"dj-14","Time":9.057292},{"Benchmark":"dj-7","Time":1.96575},{"Benchmark":"dj-7","Time":3.631542},{"Benchmark":"dj-7","Time":6.153916},{"Benchmark":"dj-5","Time":1.003209},{"Benchmark":"dj-5","Time":3.2285},{"Benchmark":"dj-5","Time":4.619708},{"Benchmark":"dj-17","Time":3.914834},{"Benchmark":"dj-17","Time":4.831125},{"Benchmark":"dj-17","Time":9.542}]},"encoding":{"color":{"field":"Implemenation","type":"nominal"},"x":{"field":"Benchmark","type":"nominal"},"y":{"field":"Time","type":"quantitative"}},"mark":"area","title":"Runtime ","width":600}
+```
+
+<!-- livebook:{"attrs":{"assign_to":"dynamic_correct","collect":false,"data_frame":"dynamic","data_frame_alias":"Elixir.DataFrame","is_data_frame":true,"missing_require":null,"operations":[{"active":true,"column":"Result","data_options":{"Allocations":"integer","Benchmark":"string","Evals":"integer","Implementation":"string","Memory":"integer","Result":"string","Samples":"integer","Time":"float","indep_Depth":"integer","indep_Qubits":"integer","indep_Single_Gates":"integer","indep_Two_Qubit_Gates":"integer","indep_Varitant":"string","transpiled_Depth":"integer","transpiled_Qubits":"integer","transpiled_Single_Gates":"integer","transpiled_Two_Qubit_Gates":"integer","transpiled_Varitant":"string"},"datalist":["not_equivalent","probably_not_equivalent","no_information","equivalent","equivalent_up_to_global_phase"],"filter":"equal","message":null,"operation_type":"filters","type":"string","value":"equivalent"}]},"chunks":null,"kind":"Elixir.KinoExplorer.DataTransformCell","livebook_object":"smart_cell"} -->
+
+```elixir
+dynamic_correct =
+  dynamic |> DataFrame.lazy() |> DataFrame.filter(col("Result") == "equivalent")
+```
+
+<!-- livebook:{"output":true} -->
+
+```text
+#Explorer.DataFrame<
+  LazyPolars[??? x 18]
+  Benchmark string ["QPE-00-3", "QPE-10-3", "QPE-10-3", "DJ-CONST-0-3", "DJ-CONST-0-3", ...]
+  indep_Varitant string ["indep", "indep", "indep", "indep", "indep", ...]
+  indep_Qubits integer [3, 3, 3, 3, 3, ...]
+  indep_Depth integer [8, 8, 8, 3, 3, ...]
+  indep_Single_Gates integer [5, 5, 5, 6, 6, ...]
+  indep_Two_Qubit_Gates integer [0, 0, 0, 1, 1, ...]
+  transpiled_Varitant string ["dynamic", "dynamic", "dynamic", "dynamic1", "dynamic1", ...]
+  transpiled_Qubits integer [3, 3, 3, 3, 3, ...]
+  transpiled_Depth integer [11, 11, 11, 7, 7, ...]
+  transpiled_Single_Gates integer [6, 6, 6, 6, 6, ...]
+  transpiled_Two_Qubit_Gates integer [0, 0, 0, 2, 2, ...]
+  Result string ["equivalent", "equivalent", "equivalent", "equivalent", "equivalent", ...]
+  Implementation string ["qcec_qmdd_alternative", "qcec_qmdd", "qcec_qmdd_alternative", "qcec_qmdd", "qcec_qmdd_alternative", ...]
+  Time float [3.018542, 6.631125, 2.924625, 3.962625, 1.906417, ...]
+  Allocations integer [50, 50, 50, 50, 50, ...]
+  Memory integer [2400, 2400, 2400, 2400, 2400, ...]
+  Evals integer [1, 1, 1, 1, 1, ...]
+  Samples integer [1, 1, 1, 1, 1, ...]
+>
+```
+
+<!-- livebook:{"attrs":{"chart_title":"Correct Equivalence Check","height":null,"layers":[{"active":true,"chart_type":"point","color_field":"Implementation","color_field_aggregate":null,"color_field_bin":null,"color_field_scale_scheme":null,"color_field_type":"nominal","data_variable":"zx","geodata_color":"blue","latitude_field":null,"longitude_field":null,"x_field":"indep_Qubits","x_field_aggregate":null,"x_field_bin":null,"x_field_scale_type":null,"x_field_type":"quantitative","y_field":"Time","y_field_aggregate":null,"y_field_bin":null,"y_field_scale_type":null,"y_field_type":"quantitative"}],"vl_alias":"Elixir.VegaLite","width":600},"chunks":null,"kind":"Elixir.KinoVegaLite.ChartCell","livebook_object":"smart_cell"} -->
+
+```elixir
+VegaLite.new(width: 600, title: "Correct Equivalence Check")
+|> VegaLite.data_from_values(zx, only: ["indep_Qubits", "Time", "Implementation"])
+|> VegaLite.mark(:point)
+|> VegaLite.encode_field(:x, "indep_Qubits", type: :quantitative)
+|> VegaLite.encode_field(:y, "Time", type: :quantitative)
+|> VegaLite.encode_field(:color, "Implementation", type: :nominal)
+```
+
+<!-- livebook:{"output":true} -->
+
+```vega-lite
+{"$schema":"https://vega.github.io/schema/vega-lite/v5.json","data":{"values":[{"Implementation":"qcec_zx","Time":2.87675,"indep_Qubits":3},{"Implementation":"qcec_zx","Time":13.840209,"indep_Qubits":4},{"Implementation":"qcec_zx","Time":6.647625,"indep_Qubits":4},{"Implementation":"qcec_zx","Time":3.011916,"indep_Qubits":3},{"Implementation":"qcec_zx","Time":3.174208,"indep_Qubits":3},{"Implementation":"qcec_zx","Time":4.187417,"indep_Qubits":3},{"Implementation":"qcec_zx","Time":3.223667,"indep_Qubits":3},{"Implementation":"qcec_zx","Time":2.49425,"indep_Qubits":4},{"Implementation":"qcec_zx","Time":2.350167,"indep_Qubits":4},{"Implementation":"qcec_zx","Time":3.230375,"indep_Qubits":3},{"Implementation":"qcec_zx","Time":14.518041,"indep_Qubits":3},{"Implementation":"qcec_zx","Time":2.109875,"indep_Qubits":3},{"Implementation":"qcec_zx","Time":4.228042,"indep_Qubits":3},{"Implementation":"qcec_zx","Time":2.4235,"indep_Qubits":3},{"Implementation":"qcec_zx","Time":3.181958,"indep_Qubits":3},{"Implementation":"qcec_zx","Time":4.172375,"indep_Qubits":3},{"Implementation":"qcec_zx","Time":2.822,"indep_Qubits":3},{"Implementation":"qcec_zx","Time":2.381792,"indep_Qubits":4},{"Implementation":"qcec_zx","Time":3.10025,"indep_Qubits":3},{"Implementation":"qcec_zx","Time":3.00875,"indep_Qubits":3},{"Implementation":"qcec_zx","Time":2.397291,"indep_Qubits":3},{"Implementation":"qcec_zx","Time":1.94325,"indep_Qubits":4},{"Implementation":"qcec_zx","Time":2.568542,"indep_Qubits":3},{"Implementation":"qcec_zx","Time":2.343792,"indep_Qubits":3},{"Implementation":"qcec_zx","Time":2.667458,"indep_Qubits":4},{"Implementation":"qcec_zx","Time":2.162417,"indep_Qubits":3},{"Implementation":"qcec_zx","Time":2.42375,"indep_Qubits":3},{"Implementation":"qcec_zx","Time":2.200542,"indep_Qubits":3},{"Implementation":"qcec_zx","Time":2.438,"indep_Qubits":4},{"Implementation":"qcec_zx","Time":2.04775,"indep_Qubits":4},{"Implementation":"qcec_zx","Time":5.365917,"indep_Qubits":3},{"Implementation":"qcec_zx","Time":3.235125,"indep_Qubits":3},{"Implementation":"qcec_zx","Time":3.035917,"indep_Qubits":3},{"Implementation":"qcec_zx","Time":2.378375,"indep_Qubits":3},{"Implementation":"qcec_zx","Time":2.703584,"indep_Qubits":3},{"Implementation":"qcec_zx","Time":3.055375,"indep_Qubits":3},{"Implementation":"qcec_zx","Time":3.317916,"indep_Qubits":3}]},"encoding":{"color":{"field":"Implementation","type":"nominal"},"x":{"field":"indep_Qubits","type":"quantitative"},"y":{"field":"Time","type":"quantitative"}},"mark":"point","title":"Correct Equivalence Check","width":600}
+```
+
+<!-- livebook:{"attrs":{"chart_title":"Runtime for Equivalent Circuits","height":null,"layers":[{"active":true,"chart_type":"line","color_field":"Implemenation","color_field_aggregate":null,"color_field_bin":null,"color_field_scale_scheme":null,"color_field_type":"nominal","data_variable":"static_same","geodata_color":"blue","latitude_field":null,"longitude_field":null,"x_field":"Qubits","x_field_aggregate":null,"x_field_bin":null,"x_field_scale_type":null,"x_field_type":"quantitative","y_field":"Time","y_field_aggregate":null,"y_field_bin":null,"y_field_scale_type":null,"y_field_type":"quantitative"}],"vl_alias":"Elixir.VegaLite","width":600},"chunks":null,"kind":"Elixir.KinoVegaLite.ChartCell","livebook_object":"smart_cell"} -->
+
+```elixir
+VegaLite.new(width: 600, title: "Runtime for Equivalent Circuits")
+|> VegaLite.data_from_values(static_same, only: ["Qubits", "Time", "Implemenation"])
+|> VegaLite.mark(:line)
+|> VegaLite.encode_field(:x, "Qubits", type: :quantitative)
+|> VegaLite.encode_field(:y, "Time", type: :quantitative)
+|> VegaLite.encode_field(:color, "Implemenation", type: :nominal)
+```
+
+<!-- livebook:{"attrs":{"chart_title":"Runtime for Different Circuits","height":null,"layers":[{"active":true,"chart_type":"line","color_field":"Implemenation","color_field_aggregate":null,"color_field_bin":null,"color_field_scale_scheme":null,"color_field_type":"nominal","data_variable":"static_changed","geodata_color":"blue","latitude_field":null,"longitude_field":null,"x_field":"Qubits","x_field_aggregate":null,"x_field_bin":null,"x_field_scale_type":null,"x_field_type":"quantitative","y_field":"Time","y_field_aggregate":null,"y_field_bin":null,"y_field_scale_type":null,"y_field_type":"quantitative"}],"vl_alias":"Elixir.VegaLite","width":600},"chunks":null,"kind":"Elixir.KinoVegaLite.ChartCell","livebook_object":"smart_cell"} -->
+
+```elixir
+VegaLite.new(width: 600, title: "Runtime for Different Circuits")
+|> VegaLite.data_from_values(static_changed, only: ["Qubits", "Time", "Implemenation"])
+|> VegaLite.mark(:line)
+|> VegaLite.encode_field(:x, "Qubits", type: :quantitative)
+|> VegaLite.encode_field(:y, "Time", type: :quantitative)
+|> VegaLite.encode_field(:color, "Implemenation", type: :nominal)
+```
+
+<!-- livebook:{"attrs":{"chart_title":"Memory for Static Circuits","height":null,"layers":[{"active":true,"chart_type":"point","color_field":null,"color_field_aggregate":null,"color_field_bin":null,"color_field_scale_scheme":null,"color_field_type":null,"data_variable":"static","geodata_color":"blue","latitude_field":null,"longitude_field":null,"x_field":"Qubits","x_field_aggregate":null,"x_field_bin":null,"x_field_scale_type":null,"x_field_type":"quantitative","y_field":"Single_Gates","y_field_aggregate":null,"y_field_bin":null,"y_field_scale_type":null,"y_field_type":"quantitative"}],"vl_alias":"Elixir.VegaLite","width":600},"chunks":null,"kind":"Elixir.KinoVegaLite.ChartCell","livebook_object":"smart_cell"} -->
+
+```elixir
+VegaLite.new(width: 600, title: "Memory for Static Circuits")
+|> VegaLite.data_from_values(static, only: ["Qubits", "Single_Gates"])
+|> VegaLite.mark(:point)
+|> VegaLite.encode_field(:x, "Qubits", type: :quantitative)
+|> VegaLite.encode_field(:y, "Single_Gates", type: :quantitative)
+```
+
+<!-- livebook:{"attrs":{"chart_title":null,"height":null,"layers":[{"active":true,"chart_type":"point","color_field":null,"color_field_aggregate":null,"color_field_bin":null,"color_field_scale_scheme":null,"color_field_type":null,"data_variable":"static_same","geodata_color":"blue","latitude_field":null,"longitude_field":null,"x_field":"Benchmark","x_field_aggregate":null,"x_field_bin":null,"x_field_scale_type":null,"x_field_type":"nominal","y_field":"Result","y_field_aggregate":null,"y_field_bin":null,"y_field_scale_type":null,"y_field_type":"nominal"}],"vl_alias":"Elixir.VegaLite","width":600},"chunks":null,"kind":"Elixir.KinoVegaLite.ChartCell","livebook_object":"smart_cell"} -->
+
+```elixir
+VegaLite.new(width: 600)
+|> VegaLite.data_from_values(static_same, only: ["Benchmark", "Result"])
+|> VegaLite.mark(:point)
+|> VegaLite.encode_field(:x, "Benchmark", type: :nominal)
+|> VegaLite.encode_field(:y, "Result", type: :nominal)
+```
+
+<!-- livebook:{"output":true} -->
+
+```vega-lite
+{"$schema":"https://vega.github.io/schema/vega-lite/v5.json","data":{"values":[{"Benchmark":"dj-3","Result":"equivalent"},{"Benchmark":"dj-3","Result":"equivalent"},{"Benchmark":"dj-3","Result":"equivalent"},{"Benchmark":"dj-9","Result":"equivalent"},{"Benchmark":"dj-9","Result":"equivalent"},{"Benchmark":"dj-9","Result":"equivalent"},{"Benchmark":"dj-19","Result":"equivalent"},{"Benchmark":"dj-19","Result":"equivalent"},{"Benchmark":"dj-19","Result":"equivalent"},{"Benchmark":"dj-8","Result":"equivalent"},{"Benchmark":"dj-8","Result":"equivalent"},{"Benchmark":"dj-8","Result":"equivalent"},{"Benchmark":"dj-4","Result":"equivalent"},{"Benchmark":"dj-4","Result":"equivalent"},{"Benchmark":"dj-4","Result":"equivalent"},{"Benchmark":"dj-6","Result":"equivalent"},{"Benchmark":"dj-6","Result":"equivalent"},{"Benchmark":"dj-6","Result":"equivalent"},{"Benchmark":"dj-12","Result":"equivalent"},{"Benchmark":"dj-12","Result":"equivalent"},{"Benchmark":"dj-12","Result":"equivalent"},{"Benchmark":"dj-10","Result":"equivalent"},{"Benchmark":"dj-10","Result":"equivalent"},{"Benchmark":"dj-10","Result":"equivalent"},{"Benchmark":"dj-20","Result":"equivalent"},{"Benchmark":"dj-20","Result":"equivalent"},{"Benchmark":"dj-20","Result":"equivalent"},{"Benchmark":"dj-2","Result":"equivalent"},{"Benchmark":"dj-2","Result":"equivalent"},{"Benchmark":"dj-2","Result":"equivalent"},{"Benchmark":"dj-15","Result":"equivalent"},{"Benchmark":"dj-15","Result":"equivalent"},{"Benchmark":"dj-15","Result":"equivalent"},{"Benchmark":"dj-18","Result":"equivalent"},{"Benchmark":"dj-18","Result":"equivalent"},{"Benchmark":"dj-18","Result":"equivalent"},{"Benchmark":"dj-11","Result":"equivalent"},{"Benchmark":"dj-11","Result":"equivalent"},{"Benchmark":"dj-11","Result":"equivalent"},{"Benchmark":"dj-13","Result":"equivalent"},{"Benchmark":"dj-13","Result":"equivalent"},{"Benchmark":"dj-13","Result":"equivalent"},{"Benchmark":"dj-16","Result":"equivalent"},{"Benchmark":"dj-16","Result":"equivalent"},{"Benchmark":"dj-16","Result":"equivalent"},{"Benchmark":"dj-14","Result":"equivalent"},{"Benchmark":"dj-14","Result":"equivalent"},{"Benchmark":"dj-14","Result":"equivalent"},{"Benchmark":"dj-7","Result":"equivalent"},{"Benchmark":"dj-7","Result":"equivalent"},{"Benchmark":"dj-7","Result":"equivalent"},{"Benchmark":"dj-5","Result":"equivalent"},{"Benchmark":"dj-5","Result":"equivalent"},{"Benchmark":"dj-5","Result":"equivalent"},{"Benchmark":"dj-17","Result":"equivalent"},{"Benchmark":"dj-17","Result":"equivalent"},{"Benchmark":"dj-17","Result":"equivalent"}]},"encoding":{"x":{"field":"Benchmark","type":"nominal"},"y":{"field":"Result","type":"nominal"}},"mark":"point","width":600}
+```
+
+```elixir
+eval = DataFrame.from_csv!(path <> "paper/eval.csv")
+```
+
+<!-- livebook:{"output":true} -->
+
+```text
+#Explorer.DataFrame<
+  Polars[6 x 5]
+  Method string ["PyZX Reconstruction", "QCEC ZX", "QCEC (QMDD) Alternative", "QCEC (QMDD) Construction", "QCEC (QMDD) Simulation", ...]
+  Correct integer [7, 0, 2, 4, 0, ...]
+  Accuracy f64 [0.189189189189189, 0.0, 0.0540540540540541, 0.108108108108108, 0.0, ...]
+  Wrong integer [26, 28, 35, 33, 37, ...]
+  Failed integer [4, 0, 0, 0, 0, ...]
+>
+```
+
+<!-- livebook:{"attrs":"eyJhc3NpZ25fdG8iOm51bGwsImNvbGxlY3QiOmZhbHNlLCJkYXRhX2ZyYW1lIjoiZXZhbCIsImRhdGFfZnJhbWVfYWxpYXMiOiJFbGl4aXIuRGF0YUZyYW1lIiwiaXNfZGF0YV9mcmFtZSI6dHJ1ZSwibWlzc2luZ19yZXF1aXJlIjpudWxsLCJvcGVyYXRpb25zIjpbeyJhY3RpdmUiOnRydWUsImRhdGFfb3B0aW9ucyI6eyJBY2N1cmFjeSI6ImZsb2F0IiwiQ29ycmVjdCI6ImludGVnZXIiLCJGYWlsZWQiOiJpbnRlZ2VyIiwiTWV0aG9kIjoic3RyaW5nIiwiV3JvbmciOiJpbnRlZ2VyIn0sImRpcmVjdGlvbiI6ImRlc2MiLCJvcGVyYXRpb25fdHlwZSI6InNvcnRpbmciLCJzb3J0X2J5IjoiQ29ycmVjdCJ9XX0","chunks":null,"kind":"Elixir.KinoExplorer.DataTransformCell","livebook_object":"smart_cell"} -->
+
+```elixir
+eval |> DataFrame.lazy() |> DataFrame.arrange(desc: col("Correct"))
+```
+
+<!-- livebook:{"output":true} -->
+
+```text
+#Explorer.DataFrame<
+  LazyPolars[??? x 5]
+  Method string ["Operator Reconstruction", "PyZX Reconstruction", "QCEC (QMDD) Construction", "QCEC (QMDD) Alternative", "QCEC ZX", ...]
+  Correct integer [15, 7, 4, 2, 0, ...]
+  Accuracy f64 [0.405405405405405, 0.189189189189189, 0.108108108108108, 0.0540540540540541, 0.0, ...]
+  Wrong integer [9, 26, 33, 35, 28, ...]
+  Failed integer [13, 4, 0, 0, 0, ...]
+>
+```
+
+<!-- livebook:{"attrs":"eyJjaGFydF90aXRsZSI6bnVsbCwiaGVpZ2h0Ijo0MDAsImxheWVycyI6W3siYWN0aXZlIjp0cnVlLCJjaGFydF90eXBlIjoiYmFyIiwiY29sb3JfZmllbGQiOm51bGwsImNvbG9yX2ZpZWxkX2FnZ3JlZ2F0ZSI6bnVsbCwiY29sb3JfZmllbGRfYmluIjpudWxsLCJjb2xvcl9maWVsZF9zY2FsZV9zY2hlbWUiOm51bGwsImNvbG9yX2ZpZWxkX3R5cGUiOm51bGwsImRhdGFfdmFyaWFibGUiOiJldmFsIiwiZ2VvZGF0YV9jb2xvciI6ImJsdWUiLCJsYXRpdHVkZV9maWVsZCI6bnVsbCwibG9uZ2l0dWRlX2ZpZWxkIjpudWxsLCJ4X2ZpZWxkIjoiTWV0aG9kIiwieF9maWVsZF9hZ2dyZWdhdGUiOm51bGwsInhfZmllbGRfYmluIjpudWxsLCJ4X2ZpZWxkX3NjYWxlX3R5cGUiOm51bGwsInhfZmllbGRfdHlwZSI6Im5vbWluYWwiLCJ5X2ZpZWxkIjoiQWNjdXJhY3kiLCJ5X2ZpZWxkX2FnZ3JlZ2F0ZSI6bnVsbCwieV9maWVsZF9iaW4iOm51bGwsInlfZmllbGRfc2NhbGVfdHlwZSI6bnVsbCwieV9maWVsZF90eXBlIjoicXVhbnRpdGF0aXZlIn1dLCJ2bF9hbGlhcyI6IkVsaXhpci5WZWdhTGl0ZSIsIndpZHRoIjo0MDB9","chunks":null,"kind":"Elixir.KinoVegaLite.ChartCell","livebook_object":"smart_cell"} -->
+
+```elixir
+VegaLite.new(width: 400, height: 400)
+|> VegaLite.data_from_values(eval, only: ["Method", "Accuracy"])
+|> VegaLite.mark(:bar)
+|> VegaLite.encode_field(:x, "Method", type: :nominal)
+|> VegaLite.encode_field(:y, "Accuracy", type: :quantitative)
+```
+
+<!-- livebook:{"output":true} -->
+
+```vega-lite
+{"$schema":"https://vega.github.io/schema/vega-lite/v5.json","data":{"values":[{"Accuracy":0.189189189189189,"Method":"PyZX Reconstruction"},{"Accuracy":0.0,"Method":"QCEC ZX"},{"Accuracy":0.0540540540540541,"Method":"QCEC (QMDD) Alternative"},{"Accuracy":0.108108108108108,"Method":"QCEC (QMDD) Construction"},{"Accuracy":0.0,"Method":"QCEC (QMDD) Simulation"},{"Accuracy":0.405405405405405,"Method":"Operator Reconstruction"}]},"encoding":{"x":{"field":"Method","type":"nominal"},"y":{"field":"Accuracy","type":"quantitative"}},"height":400,"mark":"bar","width":400}
+```
