@@ -38,15 +38,15 @@ function unitary_reconstruction(qc_dynamic::MainProgram)::MainProgram
 
 end
 
-# """
-#
-#     unitary_reconstruction(qc_dynamic::MainProgram)::MainProgram
-#
-# Reconstructs a unitary quantum circuit from a dynamic quantum circuit
-# """
-# function unitary_reconstruction(qc_dynamic_string::String)::MainProgram
-#   ast_dynamic = OpenQASM.parse(qc_dynamic_string)
-#   DynamicQuantumCircuits.unitary_reconstruction(ast_dynamic)
-# end
+"""
+
+    unitary_reconstruction(qc_dynamic::MainProgram)::MainProgram
+
+Reconstructs a unitary quantum circuit from a dynamic quantum circuit
+"""
+function unitary_reconstruction(qc_dynamic_string::String)::MainProgram
+  ast_dynamic = OpenQASM.parse(qc_dynamic_string)
+  DynamicQuantumCircuits.unitary_reconstruction(ast_dynamic)
+end
 
 end
