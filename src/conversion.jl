@@ -2,7 +2,7 @@ module Conversion
 
 using OpenQASM
 using OpenQASM.Types
-using MLStyle
+using Moshi.Match: @match
 
 using RBNF: Token
 using ..Tools

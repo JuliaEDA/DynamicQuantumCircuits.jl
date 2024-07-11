@@ -2,7 +2,7 @@ module Tools
 
 export convert_address, state_vector, read_qasm_from_file, drop_gate_of_type, prepare_for_ZXCalculus, randomize_instruction
 
-using MLStyle
+using Moshi.Match: @match
 using OpenQASM
 using OpenQASM.Types
 using OpenQASM.Tools
