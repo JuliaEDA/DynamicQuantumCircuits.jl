@@ -2,3 +2,4 @@
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
 DynamicQuantumCircuits = "b9e8302f-12f4-484c-8961-adc524bf1aaa"
+OpenQASM = "a8821629-a4c0-4df7-9e00-12969ff383a7"
