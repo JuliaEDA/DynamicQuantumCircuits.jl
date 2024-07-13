@@ -1,0 +1,74 @@
+# DynamicQuantumCircuits.jl
+
+Documentation for DynamicQuantumCircuits.jl
+
+## Optimizing qubit count
+
+An ideal circuit, is a unitary quantum circuit synthesized from a non-unitary dynamic quantum circuit.
+The non-unitary quantum circuit is the product of an optimization of an original unitary quantum circuit.
+The ideal quantum circuit allows us to verify the equivalence of the non-unitary and the original unitary quantum circuit.
+
+## Optimize the quantum circuit
+
+TBW
+
+## Circuit conversion
+
+Convert the non-unitary optimized quantum circuit into an ideal unitary representation
+
+```julia-repl
+julia> using OpenQASM
+julia> using DynamicQuantumCircuits
+julia> OpenQASM.parse("""
+  OPENQASM 2.0;
+  include "qelib1.inc";
+  qreg q0[2];
+  creg mcm[1];
+  creg end[1];
+  h q0[0];
+  x q0[1];
+  h q0[1];
+  CX q0[0],q0[1];
+  x q0[0];
+  measure q0[0] -> mcm[0];
+  reset q0[0];
+  h q0[0];
+  CX q0[0],q0[1];
+  h q0[0];
+  measure q0[0] -> end[0];
+  """)
+julia> DynamicQuantumCircuits.unitary_reconstruction(dynamic)
+```
+
+## Equivalence of a traditional and an ideal quantum circuit
+
+Verify if the original circuit and the ideal circuit are equal.
+The trace distance is a measure of the closeness of two quantum circuits.
+
+```julia-repl
+julia> using DynamicQuantumCircuits.QuantumInformation
+julia> distance = verify_equivalence(traditional, dynamic)
+```
+
+## Documentation Overview
+
+```@meta
+CurrentModule = DynamicQuantumCircuits
+```
+
+```@autodocs
+Modules = [DynamicQuantumCircuits]
+```
+
+```@contents
+Pages = [
+    "man/equivalence.md",
+    "man/transformation.md",
+    "man/conversion.md",
+    "man/operator.md",
+    "man/reorder.md",
+    "man/quantum-information.md",
+    "man/tools.md",
+]
+Depth = 1
+```
