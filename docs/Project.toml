@@ -1,5 +1,7 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
-Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
 DynamicQuantumCircuits = "b9e8302f-12f4-484c-8961-adc524bf1aaa"
+Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
 OpenQASM = "a8821629-a4c0-4df7-9e00-12969ff383a7"
+YaoHIR = "6769671a-fce8-4286-b3f7-6099e1b1298a"
+ZXCalculus = "3525faa3-032d-4235-a8d4-8c2939a218dd"
