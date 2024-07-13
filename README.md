@@ -1,7 +1,6 @@
 # DynamicQuantumCircuits
 
-[![docsdev](https://img.shields.io/badge/docs-dev-lightblue.svg)](https://juliaeda.github.io/DynamicQuantumCircuits.jl/dynamicquantumcircuits/dev/)
-[![docsstable](https://img.shields.io/badge/docs-stable-blue.svg)](https://juliaeda.github.io/DynamicQuantumCircuits.jl/dynamicquantumcircuits/stable/)
+[![docsstable](https://img.shields.io/badge/docs-stable-blue.svg)](https://juliaeda.github.io/DynamicQuantumCircuits.jl)
 [![Build Status](https://github.com/JuliaEDA/DynamicQuantumCircuits.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/JuliaEDA/DynamicQuantumCircuits.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
 DynamicQuantumCircuits.jl is a Julia package that addresses the limitations of Noisy Intermediate-Scale Quantum (NISQ) hardware by reducing qubit count. In the NISQ era, the major challenge is efficiently mapping quantum algorithms to these noisy computers. The solution lies in analyzing whether quantum algorithms can be mapped to real hardware with fewer qubits, which was not possible until the introduction of Dynamic Quantum Circuits (DQC).
