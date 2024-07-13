@@ -13,6 +13,7 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
 LinearAlgebra = "1.9.7"
+Moshi = "0.2.0"
 OpenQASM = "2.1.4"
 RBNF = "0.2.4"
 SparseArrays = "1.9.7"
