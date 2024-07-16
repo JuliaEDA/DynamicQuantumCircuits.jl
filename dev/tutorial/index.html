@@ -1,31 +1,173 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>DynamicQuantumCircuits.jl Tutorial · DynamicQuantumCircuits</title><meta name="title" content="DynamicQuantumCircuits.jl Tutorial · DynamicQuantumCircuits"/><meta property="og:title" content="DynamicQuantumCircuits.jl Tutorial · DynamicQuantumCircuits"/><meta property="twitter:title" content="DynamicQuantumCircuits.jl Tutorial · DynamicQuantumCircuits"/><meta name="description" content="Documentation for DynamicQuantumCircuits."/><meta property="og:description" content="Documentation for DynamicQuantumCircuits."/><meta property="twitter:description" content="Documentation for DynamicQuantumCircuits."/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">DynamicQuantumCircuits</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">DynamicQuantumCircuits.jl</a></li><li><a class="tocitem" href="../man/api/">APIs</a></li><li><a class="tocitem" href="../man/internal/">Internal APIs for developers</a></li><li class="is-active"><a class="tocitem" href>DynamicQuantumCircuits.jl Tutorial</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>DynamicQuantumCircuits.jl Tutorial</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>DynamicQuantumCircuits.jl Tutorial</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/JuliaEDA/DynamicQuantumCircuits.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/JuliaEDA/DynamicQuantumCircuits.jl/blob/main/docs/src/tutorial.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="tutorial"><a class="docs-heading-anchor" href="#tutorial">DynamicQuantumCircuits.jl Tutorial</a><a id="tutorial-1"></a><a class="docs-heading-anchor-permalink" href="#tutorial" title="Permalink"></a></h1><pre><code class="language-julia hljs"># Circuit conversion
-# Convert the non-unitary optimized quantum circuit into an ideal unitary representation
-using OpenQASM
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>DynamicQuantumCircuits.jl Tutorial · DynamicQuantumCircuits</title><meta name="title" content="DynamicQuantumCircuits.jl Tutorial · DynamicQuantumCircuits"/><meta property="og:title" content="DynamicQuantumCircuits.jl Tutorial · DynamicQuantumCircuits"/><meta property="twitter:title" content="DynamicQuantumCircuits.jl Tutorial · DynamicQuantumCircuits"/><meta name="description" content="Documentation for DynamicQuantumCircuits."/><meta property="og:description" content="Documentation for DynamicQuantumCircuits."/><meta property="twitter:description" content="Documentation for DynamicQuantumCircuits."/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">DynamicQuantumCircuits</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">DynamicQuantumCircuits.jl</a></li><li><a class="tocitem" href="../man/api/">APIs</a></li><li><a class="tocitem" href="../man/internal/">Internal APIs for developers</a></li><li class="is-active"><a class="tocitem" href>DynamicQuantumCircuits.jl Tutorial</a><ul class="internal"><li><a class="tocitem" href="#Circuit-conversion-Tutorial-copy-pastable-version"><span>Circuit conversion Tutorial - copy-pastable version</span></a></li><li><a class="tocitem" href="#Input:-an-OpenQASM-file"><span>Input: an <code>OpenQASM</code> file</span></a></li><li class="toplevel"><a class="tocitem" href="#Unitary-Reconstruction"><span>Unitary Reconstruction</span></a></li><li><a class="tocitem" href="#Equivalence-of-a-static-and-an-ideal-quantum-circuit"><span>Equivalence of a static and an ideal quantum circuit</span></a></li><li><a class="tocitem" href="#Verifying-the-equivalence-of-static-and-dynamic-circuits"><span>Verifying the equivalence of static and dynamic circuits</span></a></li><li><a class="tocitem" href="#Convert-the-Quantum-into-a-ZXDiagram"><span>Convert the Quantum into a <code>ZXDiagram</code></span></a></li><li><a class="tocitem" href="#Conclusion"><span>Conclusion</span></a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>DynamicQuantumCircuits.jl Tutorial</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>DynamicQuantumCircuits.jl Tutorial</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/JuliaEDA/DynamicQuantumCircuits.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/JuliaEDA/DynamicQuantumCircuits.jl/blob/main/docs/src/tutorial.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="tutorial"><a class="docs-heading-anchor" href="#tutorial">DynamicQuantumCircuits.jl Tutorial</a><a id="tutorial-1"></a><a class="docs-heading-anchor-permalink" href="#tutorial" title="Permalink"></a></h1><p>This tutorial will walk you through the main functionality of the <a href="../#DynamicQuantumCircuits.jl"><code>DynamicQuantumCircuits.jl</code></a> package. Specifically, we&#39;ll focus on converting a non-unitary optimized quantum circuit into an ideal unitary representation. Latter, we&#39;ll focus on verifying the equivalence between a unitary (static) quantum circuit and a non-unitary dynamic quantum circuit.</p><p>First, let&#39;s load the required packages and define a sample dynamic quantum circuit:</p><h2 id="Circuit-conversion-Tutorial-copy-pastable-version"><a class="docs-heading-anchor" href="#Circuit-conversion-Tutorial-copy-pastable-version">Circuit conversion Tutorial - copy-pastable version</a><a id="Circuit-conversion-Tutorial-copy-pastable-version-1"></a><a class="docs-heading-anchor-permalink" href="#Circuit-conversion-Tutorial-copy-pastable-version" title="Permalink"></a></h2><pre><code class="language-julia hljs">using OpenQASM
 using DynamicQuantumCircuits
-dynamic_qasm = &quot;&quot;&quot;
+
+bv_101_dynamic_qasm = &quot;&quot;&quot;
   OPENQASM 2.0;
   include &quot;qelib1.inc&quot;;
-  qreg q0[2];
-  creg mcm[1];
-  creg end[1];
-  h q0[0];
-  x q0[1];
-  h q0[1];
-  CX q0[0],q0[1];
-  x q0[0];
-  measure q0[0] -&gt; mcm[0];
-  reset q0[0];
-  h q0[0];
-  CX q0[0],q0[1];
-  h q0[0];
-  measure q0[0] -&gt; end[0];
+  qreg q[2];
+  creg c[3];
+  x q[1];
+  h q[0];
+  h q[1];
+  CX q[0],q[1];
+  h q[0];
+  measure q[0] -&gt; c[0];
+  reset q[0];
+  h q[0];
+  h q[0];
+  measure q[0] -&gt; c[1];
+  reset q[0];
+  h q[0];
+  CX q[0],q[1];
+  h q[0];
+  measure q[0] -&gt; c[2];
   &quot;&quot;&quot;
-dynamic = OpenQASM.parse(dynamic_qasm)
-static = DynamicQuantumCircuits.unitary_reconstruction(dynamic)
 
-# Equivalence of a static and an ideal quantum circuit
+bv_101_dynamic = OpenQASM.parse(bv_101_dynamic_qasm)
 
-# Verify if the original circuit and the ideal circuit are equal.
-# The trace distance is a measure of the closeness of two quantum circuits.
-using DynamicQuantumCircuits.QuantumInformation</code></pre><p>TODO add ZXCalculus.jl  and MQT QCEC to support the verification distance = verify_equivalence(static, dynamic)</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../man/internal/">« Internal APIs for developers</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.5.0 on <span class="colophon-date" title="Saturday 13 July 2024 10:29">Saturday 13 July 2024</span>. Using Julia version 1.10.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+# Convert the non-unitary optimized quantum circuit into an ideal unitary representation
+
+bv_101_dynamic = OpenQASM.parse(bv_101_dynamic_qasm)
+
+Now, we can use the `unitary_reconstruction` function to convert the
+dynamic quantum circuit into an ideal unitary representation:
+
+bv_101_unitary = DynamicQuantumCircuits.unitary_reconstruction(bv_101_dynamic)</code></pre><h2 id="Input:-an-OpenQASM-file"><a class="docs-heading-anchor" href="#Input:-an-OpenQASM-file">Input: an <code>OpenQASM</code> file</a><a id="Input:-an-OpenQASM-file-1"></a><a class="docs-heading-anchor-permalink" href="#Input:-an-OpenQASM-file" title="Permalink"></a></h2><p>First we need to parse the string of the circuit description with OpenQASM</p><pre><code class="language-julia hljs">using OpenQASM
+bv_101_dynamic = OpenQASM.parse(&quot;&quot;&quot;
+    OPENQASM 2.0;
+    include &quot;qelib1.inc&quot;;
+    qreg q[2];
+    creg c[3];
+    x q[1];
+    h q[0];
+    h q[1];
+    CX q[0],q[1];
+    h q[0];
+    measure q[0] -&gt; c[0];
+    reset q[0];
+    h q[0];
+    h q[0];
+    measure q[0] -&gt; c[1];
+    reset q[0];
+    h q[0];
+    CX q[0],q[1];
+    h q[0];
+    measure q[0] -&gt; c[2];
+    &quot;&quot;&quot;)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi"><span class="sgr1">OPENQASM </span><span class="sgr33">2.0</span>;
+<span class="sgr94">include </span>&quot;qelib1.inc&quot;;
+<span class="sgr94">qreg</span> <span class="sgr96">q</span>[<span class="sgr32">2</span>];
+<span class="sgr94">creg</span> <span class="sgr96">c</span>[<span class="sgr32">3</span>];
+<span class="sgr95">x</span> <span class="sgr96">q</span>[<span class="sgr32">1</span>];
+<span class="sgr95">h</span> <span class="sgr96">q</span>[<span class="sgr32">0</span>];
+<span class="sgr95">h</span> <span class="sgr96">q</span>[<span class="sgr32">1</span>];
+<span class="sgr94">CX </span><span class="sgr96">q</span>[<span class="sgr32">0</span>], <span class="sgr96">q</span>[<span class="sgr32">1</span>];
+<span class="sgr95">h</span> <span class="sgr96">q</span>[<span class="sgr32">0</span>];
+<span class="sgr94">measure </span><span class="sgr96">q</span>[<span class="sgr32">0</span>]<span class="sgr94"> -&gt; </span><span class="sgr96">c</span>[<span class="sgr32">0</span>];
+<span class="sgr94">reset </span><span class="sgr96">q</span>[<span class="sgr32">0</span>];
+<span class="sgr95">h</span> <span class="sgr96">q</span>[<span class="sgr32">0</span>];
+<span class="sgr95">h</span> <span class="sgr96">q</span>[<span class="sgr32">0</span>];
+<span class="sgr94">measure </span><span class="sgr96">q</span>[<span class="sgr32">0</span>]<span class="sgr94"> -&gt; </span><span class="sgr96">c</span>[<span class="sgr32">1</span>];
+<span class="sgr94">reset </span><span class="sgr96">q</span>[<span class="sgr32">0</span>];
+<span class="sgr95">h</span> <span class="sgr96">q</span>[<span class="sgr32">0</span>];
+<span class="sgr94">CX </span><span class="sgr96">q</span>[<span class="sgr32">0</span>], <span class="sgr96">q</span>[<span class="sgr32">1</span>];
+<span class="sgr95">h</span> <span class="sgr96">q</span>[<span class="sgr32">0</span>];
+<span class="sgr94">measure </span><span class="sgr96">q</span>[<span class="sgr32">0</span>]<span class="sgr94"> -&gt; </span><span class="sgr96">c</span>[<span class="sgr32">2</span>];</code></pre><p>Excellent, let&#39;s continue the tutorial and dive deeper into the unitary reconstruction process, focusing on how it overcomes resets and defers measurements.</p><h1 id="Unitary-Reconstruction"><a class="docs-heading-anchor" href="#Unitary-Reconstruction">Unitary Reconstruction</a><a id="Unitary-Reconstruction-1"></a><a class="docs-heading-anchor-permalink" href="#Unitary-Reconstruction" title="Permalink"></a></h1><p>The <code>unitary_reconstruction</code> function in <code>DynamicQuantumCircuits.jl</code> is responsible for converting a non-unitary optimized quantum circuit (represented as an <code>OpenQASM</code> object) into an ideal unitary representation. This process involves several key steps:</p><ol><li><p><strong>Removing Resets</strong>: Next, the function removes all reset operations from the circuit. This is done using the <code>remove_resets</code> function, which drops all <code>Reset</code> gates from the circuit&#39;s program.</p></li><li><p><strong>Deferring Measurements</strong>: After removing measurements and resets, the function defers all remaining measurements to the end of the circuit. This is done using the <code>defeer_measurements</code> function, which replaces any phase rotations controlled by measurement outcomes with phase gates controlled by the respective circuits.</p></li><li><p><strong>Unitary Reconstruction</strong>: Finally, the function performs the unitary reconstruction by converting the modified circuit into a unitary representation. This is the core of the <code>unitary_reconstruction</code> function, which ensures that the resulting circuit is a valid unitary operation.</p></li></ol><p>The key advantage of this approach is that it allows the <code>DynamicQuantumCircuits.jl</code> package to handle non-unitary circuits, such as those with resets and measurements, and convert them into an equivalent unitary representation. This is crucial for optimizing qubit usage and improving the performance of quantum algorithms on NISQ hardware.</p><p>By removing measurements and resets, and deferring the remaining measurements, the unitary reconstruction process ensures that the final circuit is a valid unitary operation, which can then be used in further analysis and optimization.</p><p>Let&#39;s see the full <code>unitary_reconstruction</code> function in action:</p><pre><code class="language-julia hljs">using DynamicQuantumCircuits
+bv_101_unitary = unitary_reconstruction(bv_101_dynamic)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi"><span class="sgr1">OPENQASM </span><span class="sgr33">2.0</span>;
+<span class="sgr94">include </span>&quot;qelib1.inc&quot;;
+<span class="sgr94">qreg</span> <span class="sgr96">q</span>[<span class="sgr32">4</span>];
+<span class="sgr94">creg</span> <span class="sgr96">c</span>[<span class="sgr32">3</span>];
+<span class="sgr95">x</span> <span class="sgr96">q</span>[<span class="sgr32">3</span>];
+<span class="sgr95">h</span> <span class="sgr96">q</span>[<span class="sgr32">2</span>];
+<span class="sgr95">h</span> <span class="sgr96">q</span>[<span class="sgr32">3</span>];
+<span class="sgr94">CX </span><span class="sgr96">q</span>[<span class="sgr32">2</span>], <span class="sgr96">q</span>[<span class="sgr32">3</span>];
+<span class="sgr95">h</span> <span class="sgr96">q</span>[<span class="sgr32">2</span>];
+<span class="sgr95">h</span> <span class="sgr96">q</span>[<span class="sgr32">1</span>];
+<span class="sgr95">h</span> <span class="sgr96">q</span>[<span class="sgr32">1</span>];
+<span class="sgr95">h</span> <span class="sgr96">q</span>[<span class="sgr32">0</span>];
+<span class="sgr94">CX </span><span class="sgr96">q</span>[<span class="sgr32">0</span>], <span class="sgr96">q</span>[<span class="sgr32">3</span>];
+<span class="sgr95">h</span> <span class="sgr96">q</span>[<span class="sgr32">0</span>];
+<span class="sgr94">measure </span><span class="sgr96">q</span>[<span class="sgr32">0</span>]<span class="sgr94"> -&gt; </span><span class="sgr96">c</span>[<span class="sgr32">2</span>];
+<span class="sgr94">measure </span><span class="sgr96">q</span>[<span class="sgr32">1</span>]<span class="sgr94"> -&gt; </span><span class="sgr96">c</span>[<span class="sgr32">1</span>];
+<span class="sgr94">measure </span><span class="sgr96">q</span>[<span class="sgr32">2</span>]<span class="sgr94"> -&gt; </span><span class="sgr96">c</span>[<span class="sgr32">0</span>];</code></pre><p>This will take the <code>bv_101_dynamic</code> circuit, remove measurements and resets, defer measurements, and then perform the unitary reconstruction to obtain the <code>bv_101_unitary</code> circuit, which is the ideal unitary representation of the original dynamic circuit.</p><p>Now that we have the unitary circuit, we can use the ZX-Calculus to verify its equivalence to the original dynamic circuit, as we did in the previous section.</p><h2 id="Equivalence-of-a-static-and-an-ideal-quantum-circuit"><a class="docs-heading-anchor" href="#Equivalence-of-a-static-and-an-ideal-quantum-circuit">Equivalence of a static and an ideal quantum circuit</a><a id="Equivalence-of-a-static-and-an-ideal-quantum-circuit-1"></a><a class="docs-heading-anchor-permalink" href="#Equivalence-of-a-static-and-an-ideal-quantum-circuit" title="Permalink"></a></h2><p>To verify if the original circuit and the ideal circuit are equal, we can use the libary <code>ZXCalculus.jl</code>. The principle of quantum circuit equality relies on the reversibility and unitarity of quantum operations.</p><p>Every quantum operation is unitary and thus reversible. The product of any quantum operation and its  inverse (adjoint) will always yield the identity. For a matrix to be unitary, the following property must hold:</p><p class="math-container">\[U \cdot U^\dagger = U^\dagger \cdot U = I_n | U \in \mathbb{R}^{n \times n}\]</p><p>If <code>U1</code> and <code>U2</code> are unitary matrices, so is their matrix product <code>U1 · U2</code>. Unitary matrices preserve inner products, so if <code>U</code> is unitary, then for all <code>V, V&#39; ∈ ℂ^n</code> we have:</p><p class="math-container">\[⟨U V |U V ′ ⟩ = ⟨V |V ′ ⟩\]</p><p>To verify the equality of two quantum circuits <code>G1</code> and <code>G2</code> with system matrices <code>U1</code> and <code>U2</code>, we can check if there is no difference <code>D = U1 · U2^†</code> between the first and second quantum circuit. If <code>tr(D) = 0</code>, then <code>U1 · U2^† = D = I</code>, and the circuits are equal.</p><p>Let&#39;s use the ZX-Calculus to verify the equivalence of the static and dynamic circuits:</p><h4 id="Equivalence-Checking-copy-pastable-version"><a class="docs-heading-anchor" href="#Equivalence-Checking-copy-pastable-version">Equivalence Checking - copy-pastable version</a><a id="Equivalence-Checking-copy-pastable-version-1"></a><a class="docs-heading-anchor-permalink" href="#Equivalence-Checking-copy-pastable-version" title="Permalink"></a></h4><pre><code class="language-julia hljs">
+using YaoHIR
+using YaoHIR: BlockIR
+using ZXCalculus
+using ZXCalculus.ZX
+
+bv_101_static = OpenQASM.parse(&quot;&quot;&quot;&quot;
+  OPENQASM 2.0;
+  include &quot;qelib1.inc&quot;;
+  qreg q[4];
+  creg c[3];
+  x q[3];
+  h q[0];
+  h q[1];
+  h q[2];
+  h q[3];
+  CX q[0],q[3];
+  CX q[2],q[3];
+  h q[0];
+  h q[1];
+  h q[2];
+  measure q[0] -&gt; c[0];
+  measure q[1] -&gt; c[1];
+  measure q[2] -&gt; c[2];
+  &quot;&quot;&quot;)
+
+bv_101_unitary = DynamicQuantumCircuits.unitary_reconstruction(bv_101_dynamic)
+bv_101_static = ZXDiagram(BlockIR(static))
+
+verify_equality(bv_101_dynamic, bv_101_static)</code></pre><p>This will check if the two ZX-Diagrams representing the static and dynamic circuits are equal, using the powerful rewrite rules of the ZX-Calculus.</p><h2 id="Verifying-the-equivalence-of-static-and-dynamic-circuits"><a class="docs-heading-anchor" href="#Verifying-the-equivalence-of-static-and-dynamic-circuits">Verifying the equivalence of static and dynamic circuits</a><a id="Verifying-the-equivalence-of-static-and-dynamic-circuits-1"></a><a class="docs-heading-anchor-permalink" href="#Verifying-the-equivalence-of-static-and-dynamic-circuits" title="Permalink"></a></h2><p>To compare the original dynamic circuit and the reconstructed unitary circuit, we&#39;ll convert them both into ZX-Diagrams and use the <code>verify_equality</code> function to check if they are equivalent.</p><h2 id="Convert-the-Quantum-into-a-ZXDiagram"><a class="docs-heading-anchor" href="#Convert-the-Quantum-into-a-ZXDiagram">Convert the Quantum into a <code>ZXDiagram</code></a><a id="Convert-the-Quantum-into-a-ZXDiagram-1"></a><a class="docs-heading-anchor-permalink" href="#Convert-the-Quantum-into-a-ZXDiagram" title="Permalink"></a></h2><p>Now, we can convert the static and unitary circuits into ZX-Diagrams and verify their equivalence:</p><pre><code class="language-julia hljs">using YaoHIR
+using YaoHIR: BlockIR
+using ZXCalculus
+using ZXCalculus.ZX
+
+bv_101_static = OpenQASM.parse(&quot;&quot;&quot;
+  OPENQASM 2.0;
+  include &quot;qelib1.inc&quot;;
+  qreg q[4];
+  creg c[3];
+  x q[3];
+  h q[0];
+  h q[1];
+  h q[2];
+  h q[3];
+  CX q[0],q[3];
+  CX q[2],q[3];
+  h q[0];
+  h q[1];
+  h q[2];
+  measure q[0] -&gt; c[0];
+  measure q[1] -&gt; c[1];
+  measure q[2] -&gt; c[2];
+  &quot;&quot;&quot;)
+
+
+bv_101_dynamic_qasm = OpenQASM.parse(&quot;&quot;&quot;
+  OPENQASM 2.0;
+  include &quot;qelib1.inc&quot;;
+  qreg q[2];
+  creg c[3];
+  x q[1];
+  h q[0];
+  h q[1];
+  CX q[0],q[1];
+  h q[0];
+  measure q[0] -&gt; c[0];
+  reset q[0];
+  h q[0];
+  h q[0];
+  measure q[0] -&gt; c[1];
+  reset q[0];
+  h q[0];
+  CX q[0],q[1];
+  h q[0];
+  measure q[0] -&gt; c[2];
+  &quot;&quot;&quot;)
+
+
+bv_101_static_zx = ZXDiagram(BlockIR(bv_101_static))
+bv_101_unitary_zx = ZXDiagram(BlockIR(bv_101_unitary))
+
+verify_equality(bv_101_unitary_zx, bv_101_static_zx)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">true</code></pre><p>This will check if the two ZX-Diagrams representing the unitary and static circuits are equal, using the powerful rewrite rules of the ZX-Calculus. If the circuits are equivalent, the function will return <code>true</code>.</p><h2 id="Conclusion"><a class="docs-heading-anchor" href="#Conclusion">Conclusion</a><a id="Conclusion-1"></a><a class="docs-heading-anchor-permalink" href="#Conclusion" title="Permalink"></a></h2><p>In this tutorial, we&#39;ve explored the key functionality of the <code>DynamicQuantumCircuits.jl</code> package, which addresses the limitations of Noisy Intermediate-Scale Quantum (NISQ) hardware by reducing qubit count. We&#39;ve learned how to convert a non-unitary optimized quantum circuit into an ideal unitary representation using the <code>unitary_reconstruction</code> function.</p><p>The unitary reconstruction process involves several important steps, such as removing measurements and resets, deferring measurements, and then performing the actual unitary reconstruction. This ensures that the resulting circuit is a valid unitary operation, which is crucial for optimizing qubit usage and improving the performance of quantum algorithms on NISQ hardware.</p><p>We&#39;ve also seen how to use the powerful ZX-Calculus to verify the equivalence of the static and dynamic circuits. By converting the circuits into ZX-Diagrams and using the <code>verify_equality</code> function, we can ensure that the original circuit and the reconstructed unitary circuit are indeed equivalent.</p><p>The <code>DynamicQuantumCircuits.jl</code> package provides a valuable tool for researchers and developers working on quantum computing, allowing them to optimize qubit usage and improve the performance of their quantum algorithms on NISQ hardware.</p><p>We hope this tutorial has been helpful in understanding the capabilities of the <code>DynamicQuantumCircuits.jl</code> package and how it can be used to address the challenges of the NISQ era. Happy coding!</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../man/internal/">« Internal APIs for developers</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.5.0 on <span class="colophon-date" title="Tuesday 16 July 2024 07:34">Tuesday 16 July 2024</span>. Using Julia version 1.10.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
