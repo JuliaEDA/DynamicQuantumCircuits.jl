@@ -9,7 +9,6 @@ Moshi = "2e0e35c7-a2e4-4343-998d-7ef72827ed2d"
 OpenQASM = "a8821629-a4c0-4df7-9e00-12969ff383a7"
 RBNF = "83ef0002-5b9e-11e9-219b-65bac3c6d69c"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
-StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
 LinearAlgebra = "1.9.7"
@@ -17,7 +16,6 @@ Moshi = "0.2.0"
 OpenQASM = "2.1.4"
 RBNF = "0.2.4"
 SparseArrays = "1.9.7"
-StaticArrays = "1.9.7"
 julia = "1.9.7"
 
 [extras]
